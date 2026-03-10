@@ -12,7 +12,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Static files first
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -27,17 +28,17 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
-# Disable ALL automated redirects
-SECURE_SSL_REDIRECT = False
-APPEND_SLASH = False # Kill trailing slash redirects
-REMOVE_SLASH = False
+# Security & Redirects
+SECURE_SSL_REDIRECT = False # HF Proxy handles SSL
+APPEND_SLASH = True 
 SECURE_HSTS_SECONDS = 0
 
 # Cookie settings for Hugging Face iFrames
-# SESSION_COOKIE_SAMESITE = 'None' # Requires SECURE=True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SAMESITE = 'None'
-# CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+X_FRAME_OPTIONS = 'ALLOWALL'
 
 DATABASES = {
     'default': {
