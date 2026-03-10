@@ -1,0 +1,111 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Account Settings - Resume Classifier{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="mb-10">
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Account Settings</h1>
+        <p class="text-slate-500 font-medium text-lg">Manage your personal information and application preferences.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-1 space-y-2">
+            <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-3 text-indigo-600 font-black text-sm">
+                <i data-lucide="user" class="w-5 h-5"></i>
+                Personal Info
+            </div>
+            <div class="p-4 bg-white border border-transparent rounded-2xl flex items-center gap-3 text-slate-400 font-bold text-sm hover:bg-slate-50 transition-colors cursor-pointer">
+                <i data-lucide="shield" class="w-5 h-5"></i>
+                Security
+            </div>
+            <div class="p-4 bg-white border border-transparent rounded-2xl flex items-center gap-3 text-slate-400 font-bold text-sm hover:bg-slate-50 transition-colors cursor-pointer">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                Billing
+            </div>
+        </div>
+
+        <!-- Main Settings Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden animate-fade-up">
+                <div class="p-8 sm:p-10">
+                    <form action="{% url 'accounts:profile' %}" method="POST" class="space-y-8">
+                        {% csrf_token %}
+
+                        <!-- Profile Avatar Section -->
+                        <div class="flex items-center gap-6 pb-8 border-b border-slate-50">
+                            <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-indigo-100">
+                                {{ profile.first_name|first|default:user.username|first|upper }}
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-black text-slate-900">Your Photo</h4>
+                                <p class="text-sm text-slate-400 font-medium">Avatar updated from your login provider.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label for="first_name" class="block text-xs font-black text-slate-400 uppercase tracking-widest">First Name</label>
+                                <input type="text" name="first_name" id="first_name" value="{{ profile.first_name }}" 
+                                    class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300"
+                                    placeholder="John">
+                            </div>
+                            <div class="space-y-2">
+                                <label for="last_name" class="block text-xs font-black text-slate-400 uppercase tracking-widest">Last Name</label>
+                                <input type="text" name="last_name" id="last_name" value="{{ profile.last_name }}" 
+                                    class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300"
+                                    placeholder="Doe">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest">Email Address</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                                    <i data-lucide="mail" class="w-5 h-5 text-slate-300"></i>
+                                </div>
+                                <input type="email" value="{{ profile.email }}" disabled 
+                                    class="w-full bg-slate-50/50 border-none rounded-2xl py-4 pl-14 pr-6 text-slate-400 font-bold cursor-not-allowed">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="target_job" class="block text-xs font-black text-slate-400 uppercase tracking-widest">Target Job Title</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                                    <i data-lucide="briefcase" class="w-5 h-5 text-slate-300"></i>
+                                </div>
+                                <input type="text" name="target_job" id="target_job" value="{{ profile.target_job }}" 
+                                    class="w-full bg-slate-50 border-none rounded-2xl py-4 pl-14 pr-6 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300"
+                                    placeholder="e.g. Senior Frontend Engineer">
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                    <i data-lucide="award" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-sm font-black text-slate-900">Current Plan</h5>
+                                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ profile.subscription_tier|default:"Free Trial" }}</p>
+                                </div>
+                            </div>
+                            <button type="button" class="text-indigo-600 font-black text-xs hover:underline uppercase tracking-widest">Upgrade</button>
+                        </div>
+
+                        <div class="pt-6 flex justify-end">
+                            <button type="submit" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black px-10 py-5 rounded-2xl shadow-xl shadow-indigo-100 hover:brightness-110 active:scale-95 transition-all text-lg flex items-center gap-2">
+                                <i data-lucide="save" class="w-5 h-5"></i>
+                                Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

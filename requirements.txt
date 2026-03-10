@@ -1,0 +1,17 @@
+Django>=5.0
+djangorestframework
+celery
+redis
+firebase-admin
+langchain
+langchain-openai
+langchain-core
+pypdf
+PyPDF2>=3.0.0
+python-docx
+python-dotenv
+gunicorn
+whitenoise
+docx2txt
+eventlet
+supervisor

@@ -1,0 +1,151 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Upload Resume - Resume Classifier{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+        <div class="inline-flex items-center justify-center p-3 bg-indigo-50 rounded-2xl mb-4 text-indigo-600">
+            <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+        </div>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Upload New Resume</h1>
+        <p class="text-slate-500 font-medium text-lg">Upload your resume in PDF or DOCX format for instant AI analysis.</p>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div class="p-8 sm:p-12">
+            <form id="upload-form" action="{% url 'resumes:upload' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="relative group">
+                    <div class="mt-1 flex justify-center px-10 py-16 border-2 border-slate-100 border-dashed rounded-[2rem] group-hover:border-indigo-500 group-hover:bg-indigo-50/30 transition-all cursor-pointer bg-slate-50/50" id="drop-zone">
+                        <div class="space-y-4 text-center">
+                            <i data-lucide="file-up" class="mx-auto h-16 w-16 text-slate-300 group-hover:text-indigo-500 transition-colors"></i>
+                            <div class="flex flex-col text-sm text-slate-600">
+                                <label for="resume_file" class="relative cursor-pointer rounded-md font-black text-indigo-600 hover:text-indigo-800 transition-colors">
+                                    <span class="text-lg">Upload a file</span>
+                                    <input id="resume_file" name="resume_file" type="file" class="sr-only" accept=".pdf,.doc,.docx" required>
+                                </label>
+                                <p class="mt-1 font-medium text-slate-400">or drag and drop here</p>
+                            </div>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest bg-white px-4 py-1.5 rounded-full border border-slate-100 inline-block">
+                                PDF or DOCX (Max 10MB)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="file-name-display" class="mt-8 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center justify-between hidden">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="file-check" class="w-6 h-6 text-indigo-600"></i>
+                        <span id="file-name-text" class="text-sm font-black text-slate-700 truncate max-w-[200px] sm:max-w-xs"></span>
+                    </div>
+                    <button type="button" onclick="window.location.reload()" class="text-slate-400 hover:text-red-500 p-1">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="mt-10">
+                    <button type="submit" id="submit-btn" class="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-5 rounded-2xl shadow-xl hover:shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all text-lg">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                        Start AI Analysis
+                    </button>
+                </div>
+            </form>
+            
+            <div id="progress-container" class="mt-10 hidden">
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-sm font-black text-slate-900 uppercase tracking-widest">Processing</h4>
+                        <span class="text-xs font-black text-indigo-600 animate-pulse">Running AI pipeline...</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-[65%] rounded-full animate-[progress_2s_infinite_ease-in-out]"></div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4 text-center font-medium">Extracting data, analyzing skills, and generating scores. This usually takes 5-10 seconds.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes progress {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(150%); }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('resume_file');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const fileNameText = document.getElementById('file-name-text');
+        const dropZone = document.getElementById('drop-zone');
+        const form = document.getElementById('upload-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const progressContainer = document.getElementById('progress-container');
+        
+        const updateFileName = (file) => {
+            if (file) {
+                fileNameText.textContent = file.name;
+                fileNameDisplay.classList.remove('hidden');
+                dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+            }
+        };
+
+        fileInput.addEventListener('change', (e) => updateFileName(e.target.files[0]));
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                e.preventDefault(); e.stopPropagation();
+            }, false);
+        });
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('border-indigo-500', 'bg-indigo-50/50'), false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/50'), false);
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileName(files[0]);
+            }
+        }, false);
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (fileInput.files.length === 0) return alert("Please select a file first");
+            
+            submitBtn.disabled = true;
+            submitBtn.style.display = 'none';
+            progressContainer.classList.remove('hidden');
+            
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST', body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') window.location.href = data.redirect_url;
+                else { alert('Upload failed: ' + data.message); resetUI(); }
+            })
+            .catch(() => { alert('An error occurred during upload.'); resetUI(); });
+        });
+        
+        function resetUI() {
+            submitBtn.disabled = false;
+            submitBtn.style.display = 'flex';
+            progressContainer.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

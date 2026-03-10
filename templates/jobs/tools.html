@@ -1,0 +1,118 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}AI Career Tools - Resume Classifier{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <!-- Page Header -->
+    <div class="text-center mb-16">
+        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">AI Career Tools</h1>
+        <p class="text-slate-500 font-medium text-lg max-w-2xl mx-auto">
+            Use your analyzed resumes to instantly generate tailored cover letters, interview preparation content, and job match analysis.
+        </p>
+        <div class="mt-8 flex justify-center">
+            <div class="h-1 w-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"></div>
+        </div>
+    </div>
+
+    <!-- Main Tool Card -->
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-white rounded-[3rem] border border-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.03)] overflow-hidden">
+            <div class="md:grid md:grid-cols-12">
+                
+                <!-- Left Info Section -->
+                <div class="md:col-span-4 bg-slate-50/50 p-10 border-r border-slate-50 flex flex-col justify-between">
+                    <div>
+                        <div class="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm mb-6 text-indigo-600">
+                            <i data-lucide="sparkles" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 mb-4">Generate Content</h3>
+                        <p class="text-slate-500 font-medium leading-relaxed">
+                            Paste a job description and select which tool and resume to use as context for our AI models.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Right Form Section -->
+                <div class="md:col-span-8 p-10 md:p-12">
+                    <form action="{% url 'jobs:generate_tool' %}" method="POST" id="tool-form" class="space-y-8">
+                        {% csrf_token %}
+                        
+                        <!-- Tool Selection Tiles -->
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Select AI Tool</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <input type="radio" name="tool_type" id="tool_match" value="match_score" checked class="hidden peer/match">
+                                <label for="tool_match" class="cursor-pointer p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl flex flex-col items-center text-center gap-3 transition-all peer-checked/match:border-indigo-500 peer-checked/match:bg-indigo-50 peer-checked/match:shadow-md hover:bg-white hover:shadow-sm">
+                                    <i data-lucide="zap" class="w-6 h-6 text-indigo-600"></i>
+                                    <span class="block font-black text-slate-900 text-xs">Match Score</span>
+                                </label>
+
+                                <input type="radio" name="tool_type" id="tool_cover" value="cover_letter" class="hidden peer/cover">
+                                <label for="tool_cover" class="cursor-pointer p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl flex flex-col items-center text-center gap-3 transition-all peer-checked/cover:border-indigo-500 peer-checked/cover:bg-indigo-50 peer-checked/cover:shadow-md hover:bg-white hover:shadow-sm">
+                                    <i data-lucide="file-edit" class="w-6 h-6 text-indigo-600"></i>
+                                    <span class="block font-black text-slate-900 text-xs">Cover Letter</span>
+                                </label>
+
+                                <input type="radio" name="tool_type" id="tool_interview" value="interview" class="hidden peer/interview">
+                                <label for="tool_interview" class="cursor-pointer p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl flex flex-col items-center text-center gap-3 transition-all peer-checked/interview:border-indigo-500 peer-checked/interview:bg-indigo-50 peer-checked/interview:shadow-md hover:bg-white hover:shadow-sm">
+                                    <i data-lucide="mic-2" class="w-6 h-6 text-indigo-600"></i>
+                                    <span class="block font-black text-slate-900 text-xs">Mock Interview</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Base Resume -->
+                        <div>
+                            <label for="resume_id" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Base Resume Context</label>
+                            <div class="relative">
+                                <select id="resume_id" name="resume_id" required class="block w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-5 text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all appearance-none cursor-pointer">
+                                    {% for resume in resumes %}
+                                        <option value="{{ resume.id }}">{{ resume.original_filename }}</option>
+                                    {% empty %}
+                                        <option value="" disabled selected>No resumes available</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Job Description -->
+                        <div>
+                            <label for="job_description" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Target Job Description</label>
+                            <textarea id="job_description" name="job_description" rows="5" required class="block w-full bg-slate-50 border border-slate-100 rounded-[2rem] py-5 px-6 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all placeholder:text-slate-300" placeholder="Paste the job description here..."></textarea>
+                        </div>
+                        
+                        <!-- Action Button -->
+                        <div class="flex items-center justify-between pt-4">
+                            <div id="loading-indicator" class="hidden flex items-center gap-3">
+                                <div class="flex space-x-1">
+                                    <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></div>
+                                    <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                    <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                </div>
+                                <span class="text-xs font-black text-indigo-600 uppercase tracking-widest">Generating...</span>
+                            </div>
+                            
+                            <button type="submit" id="submit-btn" class="ml-auto flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black px-10 py-5 rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition-all group {% if not resumes %}opacity-50 cursor-not-allowed{% endif %}" {% if not resumes %}disabled{% endif %}>
+                                <i data-lucide="zap" class="w-5 h-5 group-hover:scale-125 transition-transform"></i>
+                                Generate Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('tool-form').addEventListener('submit', function() {
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('loading-indicator').classList.remove('hidden');
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume Analysis Report - {{ resume.original_filename }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @media print {
+            body { 
+                background: white; 
+                margin: 0;
+                padding: 0;
+            }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans p-8">
+    <div id="report-container" class="max-w-4xl mx-auto bg-white p-10 shadow-lg print:shadow-none print:p-0">
+        
+        <!-- Print Header Controls -->
+        <div class="no-print flex justify-between mb-8 border-b pb-4">
+            <a href="{% url 'resumes:detail' resume.id %}" class="text-indigo-600 hover:text-indigo-800 font-medium">&larr; Back to Detail</a>
+            <div class="flex gap-4">
+                <button onclick="downloadPDF()" class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Download PDF
+                </button>
+                <button onclick="window.print()" class="text-gray-600 hover:text-gray-800 font-medium px-4 py-2">
+                    Print / Save
+                </button>
+            </div>
+        </div>
+
+        {% if analysis %}
+        <!-- Report Header -->
+        <div class="text-center border-b pb-6 mb-8 mt-4">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Resume Analysis Report</h1>
+            <p class="text-gray-500 text-lg">{{ resume.original_filename }}</p>
+            <p class="text-gray-400 mt-2 text-sm">Generated on {{ analysis.created_at|slice:":10" }} | ATS Score: <span class="font-bold text-indigo-600">{{ analysis.ats_score }}/100</span></p>
+        </div>
+
+        <!-- Section 1: Candidate Overview -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Candidate Overview</h2>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div><span class="font-medium text-gray-600">Name:</span> {{ analysis.structured_data.first_name }} {{ analysis.structured_data.last_name }}</div>
+                <div><span class="font-medium text-gray-600">Email:</span> {{ analysis.structured_data.email|default:"Not found" }}</div>
+                <div><span class="font-medium text-gray-600">Phone:</span> {{ analysis.structured_data.phone|default:"Not found" }}</div>
+                <div><span class="font-medium text-gray-600">Est. Experience:</span> {{ analysis.structured_data.experience_level }}</div>
+            </div>
+        </div>
+
+        <!-- Section 2: Skills -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Extracted Skills</h2>
+            <div class="mb-4">
+                <h3 class="text-md font-medium text-gray-700 mb-2">Technical & Hard Skills:</h3>
+                <p class="text-sm text-gray-800 leading-relaxed">
+                    {{ analysis.structured_data.technical_skills|join:", " }}
+                </p>
+            </div>
+            <div>
+                <h3 class="text-md font-medium text-gray-700 mb-2">Soft Skills:</h3>
+                <p class="text-sm text-gray-800 leading-relaxed">
+                    {{ analysis.structured_data.soft_skills|join:", " }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Section 3: Recommended Roles -->
+        <div class="mb-8 page-break">
+            <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Recommended Roles</h2>
+            <div class="space-y-4">
+                {% for role in analysis.recommended_roles %}
+                <div class="bg-gray-50 p-4 rounded border">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-semibold text-gray-900">{{ role.role_name }}</span>
+                        <span class="text-sm font-bold text-green-700">{{ role.match_percentage }}% Match</span>
+                    </div>
+                    {% if role.missing_skills %}
+                    <p class="text-sm text-gray-600">
+                        <span class="font-medium">Identified Skill Gaps:</span> {{ role.missing_skills|join:", " }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-500">No specific roles could be recommended based on the extracted data.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 4: Improvement Suggestions -->
+        <div class="mb-8 mt-8">
+            <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Actionable Feedback</h2>
+            <div class="space-y-4 text-sm text-gray-800">
+                <p><strong class="block text-gray-900 mb-1">Professional Summary:</strong> {{ analysis.structured_data.improvement_suggestions.summary_improvement }}</p>
+                <p><strong class="block text-gray-900 mb-1">Experience Bullets:</strong> {{ analysis.structured_data.improvement_suggestions.experience_bullets_improvement }}</p>
+                <p><strong class="block text-gray-900 mb-1">Formatting & Readability:</strong> {{ analysis.structured_data.improvement_suggestions.formatting_suggestions }}</p>
+                
+                {% if analysis.structured_data.improvement_suggestions.missing_keywords %}
+                <p>
+                    <strong class="block text-gray-900 mb-1">Suggested Keywords to Add:</strong>
+                    {{ analysis.structured_data.improvement_suggestions.missing_keywords|join:", " }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer Footer -->
+        <div class="text-center text-xs text-gray-400 border-t pt-4 mt-12">
+            Generated by Resume Classifier AI &bull; {{ analysis.created_at|slice:":10" }}
+        </div>
+        
+        {% else %}
+        <div class="text-center py-20">
+            <h2 class="text-xl text-red-600">Analysis Data Not Found or Processing Not Complete.</h2>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        function downloadPDF() {
+            const element = document.getElementById('report-container');
+            const opt = {
+                margin:       0.5,
+                filename:     'Resume_Analysis_{{ resume.id }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            // Hide controls before capture
+            const controls = document.querySelector('.no-print');
+            controls.style.visibility = 'hidden';
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                controls.style.visibility = 'visible';
+            });
+        }
+
+        // Auto-download if ?download=1 is in URL
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('download') === '1') {
+                setTimeout(() => {
+                    const element = document.getElementById('report-container');
+                    const opt = {
+                        margin:       0.5,
+                        filename:     'Resume_Analysis_{{ resume.id }}.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true },
+                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+                        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                    };
+
+                    // Hide controls
+                    const controls = document.querySelector('.no-print');
+                    if(controls) controls.style.visibility = 'hidden';
+
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        // Close tab after 2 seconds to ensure download started
+                        setTimeout(() => {
+                            window.close();
+                        }, 2000);
+                    });
+                }, 1500); 
+            }
+        });
+    </script>
+</body>
+</html>

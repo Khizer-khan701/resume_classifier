@@ -1,0 +1,74 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Tailored Cover Letter - Resume Classifier{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div class="mb-4">
+        <a href="{% url 'jobs:tools_home' %}"
+            class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            <svg class="mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                    clip-rule="evenodd" />
+            </svg>
+            Back to Tools
+        </a>
+    </div>
+
+    <!-- Letter Meta Info -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center bg-gray-50 border-b">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Generated Cover Letter
+                </h3>
+            </div>
+            <div class="flex space-x-3">
+                <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                    Est. Match Score: {{ document.content.match_score }} / 100
+                </span>
+                <button onclick="copyToClipboard()"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Copy Text
+                </button>
+            </div>
+        </div>
+
+        <div class="px-4 py-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="col-span-1 border-r pr-4">
+                <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Key Selling Points</h4>
+                <ul class="space-y-2 text-sm text-gray-700 list-disc pl-5">
+                    {% for pt in document.content.key_selling_points %}
+                    <li>{{ pt }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="col-span-2 relative">
+                <div class="mb-4">
+                    <span class="text-sm font-medium text-gray-500">Subject: </span>
+                    <span class="text-sm font-semibold text-gray-900">{{ document.content.subject }}</span>
+                </div>
+
+                <div id="cover-letter-body"
+                    class="whitespace-pre-wrap text-gray-800 font-serif leading-loose text-justify p-6 bg-gray-50 rounded border border-gray-100 shadow-inner min-h-[400px]">
+                    {{ document.content.body }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyToClipboard() {
+        const bodyText = document.getElementById('cover-letter-body').innerText;
+        navigator.clipboard.writeText(bodyText).then(() => {
+            alert('Copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Resume Classifier{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .selection-indigo::selection { background: #e0e7ff; color: #4f46e5; }
+        
+        /* Premium Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Delay classes for staggered entry */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+    </style>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.css" />
+    <script>
+        // Init Firebase
+        const firebaseConfig = {
+            apiKey: "{{ firebase_api_key|default:'AIzaSyDUI_xLud7fA6NVc39qx-2vgntcEuiZj4w' }}",
+            authDomain: "{{ firebase_auth_domain|default:'resume-classifier-ef2f2.firebaseapp.com' }}",
+            projectId: "{{ firebase_project_id|default:'resume-classifier-ef2f2' }}"
+        };
+        // Attach to window for modular JS access
+        window.firebaseConfig = firebaseConfig;
+        
+        // Initialize Compat SDK if config exists (for FirebaseUI)
+        if(firebaseConfig.apiKey) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[#f8fafc] text-slate-900 antialiased flex flex-col min-h-screen selection-indigo">
+    {% block navbar %}
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100 flex-none">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center gap-8">
+                    <div class="flex-shrink-0 flex items-center gap-2 group cursor-pointer">
+                        <a href="{% url 'root' %}" class="flex items-center gap-2">
+                            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:rotate-6 transition-transform">
+                                <i data-lucide="file-text" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <span class="text-xl font-black text-slate-900 tracking-tighter hidden sm:block">Resume Classifier</span>
+                        </a>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center gap-1">
+                        <a href="{% url 'dashboard:home' %}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all {% if request.resolver_match.app_name == 'dashboard' or request.resolver_match.url_name == 'home' %}bg-indigo-50 text-indigo-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">Dashboard</a>
+                        <a href="{% url 'resumes:list' %}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all {% if request.resolver_match.app_name == 'resumes' %}bg-indigo-50 text-indigo-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">My Resumes</a>
+                        <a href="{% url 'jobs:tools_home' %}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all {% if request.resolver_match.app_name == 'jobs' %}bg-indigo-50 text-indigo-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">Career Tools</a>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    {% if user.is_authenticated %}
+                        <div class="h-8 w-px bg-slate-100 mx-2 hidden sm:block"></div>
+                        <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-slate-50 transition-colors group">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                                {{ user_profile.first_name|slice:":1"|upper }}{{ user_profile.last_name|slice:":1"|upper|default:user.username|slice:":2"|upper }}
+                            </div>
+                            <span class="text-sm font-bold text-slate-700 hidden lg:block">{{ user_profile.first_name }} {{ user_profile.last_name }}{% if not user_profile.first_name and not user_profile.last_name %}{{ user.username }}{% endif %}</span>
+                        </a>
+                        <a href="{% url 'accounts:logout' %}" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Logout">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="text-slate-600 font-bold hover:text-indigo-600 px-4">Login</a>
+                        <a href="{% url 'accounts:signup' %}" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    <main class="flex-grow w-full">
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for message in messages %}
+                    <div class="p-4 rounded-2xl flex items-center gap-3 {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-100{% else %}bg-green-50 text-green-800 border border-green-100{% endif %} font-bold text-sm mb-2">
+                        <i data-lucide="{% if message.tags == 'error' %}alert-circle{% else %}check-circle{% endif %}" class="w-5 h-5"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}
+    <footer class="bg-white mt-auto border-t border-slate-100 flex-none py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+            <div class="text-sm text-slate-400 font-medium">
+                &copy; {% now "Y" %} Resume Classifier AI. Built for premium career growth.
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-slate-400 hover:text-indigo-600 transition-colors">Privacy</a>
+                <a href="#" class="text-slate-400 hover:text-indigo-600 transition-colors">Terms</a>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
