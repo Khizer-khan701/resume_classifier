@@ -1,13 +1,18 @@
 from .base import *
 import os
 
-DEBUG = True # Keeping True for one final verification
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# CSRF Trusted Origins for Hugging Face
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.hf.space',
+    'https://*.huggingface.co'
+]
+
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Static files first
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -17,21 +22,23 @@ MIDDLEWARE = [
     'common.middleware.GlobalErrorHandlingMiddleware',
 ]
 
-# --- Hugging Face Proxy Configuration ---
-# This is the magic that prevents the redirect loop
+# Hugging Face Proxy Settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
-# Disable Django's internal redirects (Proxy handles this)
+# Disable ALL automated redirects
 SECURE_SSL_REDIRECT = False
-APPEND_SLASH = True # Standard Django behavior
+APPEND_SLASH = False # Kill trailing slash redirects
+REMOVE_SLASH = False
 SECURE_HSTS_SECONDS = 0
 
-# Static files optimization
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Cookie settings for Hugging Face iFrames
+# SESSION_COOKIE_SAMESITE = 'None' # Requires SECURE=True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SAMESITE = 'None'
+# CSRF_COOKIE_SECURE = True
 
-# Database using SQLite for Django internals
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

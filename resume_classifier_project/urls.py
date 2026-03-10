@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import redirect
+from dashboard.views import home_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -9,5 +9,5 @@ urlpatterns = [
     path('resumes/', include('resumes.urls')),
     path('jobs/', include('jobs.urls')),
     path('reports/', include('reports.urls')),
-    path('', lambda req: redirect('dashboard:home'), name='root'),
+    path('', home_view, name='root'),
 ]
