@@ -1,3 +1,12 @@
+---
+title: Resume Classifier
+emoji: 🏎️
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Resume Classifier SaaS
 
 A production-ready, AI-powered resume analysis SaaS built with Django, Firestore, Celery, Redis, and LangChain.
