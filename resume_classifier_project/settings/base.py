@@ -122,13 +122,25 @@ DATABASES = {
 import firebase_admin
 from firebase_admin import credentials
 
-FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH')
-if FIREBASE_CREDENTIALS_PATH and os.path.exists(FIREBASE_CREDENTIALS_PATH):
+# Check multiple paths: env var, or default location in Docker
+env_path = os.environ.get('FIREBASE_CREDENTIALS_PATH')
+docker_path = '/app/firebase-key.json'
+local_path = 'firebase_key.json'
+
+FIREBASE_CREDENTIALS_PATH = None
+if env_path and os.path.exists(env_path):
+    FIREBASE_CREDENTIALS_PATH = env_path
+elif os.path.exists(docker_path):
+    FIREBASE_CREDENTIALS_PATH = docker_path
+elif os.path.exists(local_path):
+    FIREBASE_CREDENTIALS_PATH = local_path
+
+if FIREBASE_CREDENTIALS_PATH:
     if not firebase_admin._apps:
         cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
         firebase_admin.initialize_app(cred)
 else:
-    print(f"WARNING: Firebase credentials file not found at {FIREBASE_CREDENTIALS_PATH}. Firestore features will be disabled.")
+    print(f"WARNING: Firebase credentials file not found. Firestore features will be disabled.")
 
 
 # --- Redis & Celery Configuration ---
