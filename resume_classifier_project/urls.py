@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
 
+from common.views import health_check
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
@@ -25,5 +27,5 @@ urlpatterns = [
     path('resumes/', include('resumes.urls')),
     path('jobs/', include('jobs.urls')),
     path('reports/', include('reports.urls')),
-    path('', lambda req: redirect('dashboard:home'), name='root'),
+    path('', health_check, name='root'),
 ]
