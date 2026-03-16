@@ -286,6 +286,7 @@
     }
 
     async function syncWithBackend(user) {
+        const idToken = await user.getIdToken();
         const csrfToken = '{{ csrf_token }}';
         const response = await fetch("{% url 'accounts:firebase_login' %}", {
             method: "POST",
@@ -295,16 +296,14 @@
                 "X-CSRFToken": csrfToken
             },
             body: JSON.stringify({
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName || user.email.split('@')[0]
+                idToken: idToken
             })
         });
         const data = await response.json();
-        if (data.status === 'success') {
-            window.location.assign(data.redirect_url);
+        if (data.message === 'Login successful') {
+            window.location.assign("/dashboard/");
         } else {
-            throw new Error(data.message);
+            throw new Error(data.error || "Backend sync failed");
         }
     }
 
