@@ -3,6 +3,13 @@ import json
 import firebase_admin
 from firebase_admin import credentials
 
+# Load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not available, continue
+
 def initialize_firebase():
     """
     Initialize Firebase Admin SDK with proper fallback logic.
@@ -13,6 +20,9 @@ def initialize_firebase():
 
     firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     firebase_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
+
+    print(f"DEBUG: FIREBASE_SERVICE_ACCOUNT_JSON present: {firebase_json is not None}")
+    print(f"DEBUG: FIREBASE_CREDENTIALS_PATH: {firebase_path}")
 
     try:
         if firebase_json:
@@ -30,6 +40,7 @@ def initialize_firebase():
 
         else:
             print("WARNING: Firebase credentials not found. Firebase features will be disabled.")
+            print(f"DEBUG: firebase_path='{firebase_path}', exists={os.path.exists(firebase_path) if firebase_path else 'N/A'}")
             return False
 
     except Exception as e:
