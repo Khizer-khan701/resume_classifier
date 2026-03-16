@@ -123,52 +123,18 @@ DATABASES = {
 import firebase_admin
 from firebase_admin import credentials
 
-# Initialize Firebase credentials
-firebase_cred = None
-
-# First, try to load from environment variable (for Railway/production)
-firebase_json_str = os.environ.get('FIREBASE_SERVICE_ACCOUNT_JSON')
-if firebase_json_str:
-    try:
-        firebase_dict = json.loads(firebase_json_str)
-        firebase_cred = credentials.Certificate(firebase_dict)
-        print("Firebase credentials loaded from FIREBASE_SERVICE_ACCOUNT_JSON environment variable.")
-    except json.JSONDecodeError as e:
-        print(f"ERROR: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
-    except Exception as e:
-        print(f"ERROR: Failed to initialize Firebase from env var: {e}")
-else:
-    # Fallback to file-based credentials (for local development)
-    env_path = os.environ.get('FIREBASE_CREDENTIALS_PATH')
-    docker_path = '/app/firebase-key.json'
-    local_path = 'firebase_key.json'
-
-    FIREBASE_CREDENTIALS_PATH = None
-    if env_path and os.path.exists(env_path):
-        FIREBASE_CREDENTIALS_PATH = env_path
-    elif os.path.exists(docker_path):
-        FIREBASE_CREDENTIALS_PATH = docker_path
-    elif os.path.exists(local_path):
-        FIREBASE_CREDENTIALS_PATH = local_path
-
-    if FIREBASE_CREDENTIALS_PATH:
-        try:
-            firebase_cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
-            print(f"Firebase credentials loaded from file: {FIREBASE_CREDENTIALS_PATH}")
-        except Exception as e:
-            print(f"ERROR: Failed to load Firebase credentials from file {FIREBASE_CREDENTIALS_PATH}: {e}")
+# Try to initialize Firebase using the centralized function
+try:
+    from firebase_init import initialize_firebase
+    firebase_initialized = initialize_firebase()
+    if firebase_initialized:
+        print("Firebase initialized successfully in Django settings.")
     else:
-        print("WARNING: Firebase credentials not found. Firestore features will be disabled.")
-
-# Initialize Firebase if credentials are available
-if firebase_cred and not firebase_admin._apps:
-    try:
-        firebase_admin.initialize_app(firebase_cred)
-        print("Firebase Admin SDK initialized successfully.")
-    except Exception as e:
-        print(f"ERROR: Failed to initialize Firebase Admin SDK: {e}")
-elif not firebase_cred:
-    print("WARNING: Firebase credentials file not found. Firestore features will be disabled.")
+        print("Firebase initialization skipped - features will be disabled.")
+except ImportError as e:
+    print(f"Warning: Could not import firebase_init: {e}")
+except Exception as e:
+    print(f"Warning: Firebase initialization failed in settings: {e}")
 
 
 # --- Redis & Celery Configuration ---

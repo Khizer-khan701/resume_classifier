@@ -12,8 +12,5 @@ python manage.py migrate --noinput
 # Collect static files
 python manage.py collectstatic --noinput
 
-# Create supervisor log directory
-mkdir -p /var/log/supervisor
-
-# Start Supervisor (Starts Django and Celery)
-exec supervisord -c /app/supervisor-railway.conf
+# Start Django with Gunicorn
+exec gunicorn resume_classifier_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2

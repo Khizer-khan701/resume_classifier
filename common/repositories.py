@@ -19,13 +19,19 @@ class BaseFirestoreRepository(abc.ABC):
     def __init__(self):
         # Ensure Firebase app is initialized before accessing Firestore
         if not firebase_admin._apps:
-            from django.conf import settings
-            path = getattr(settings, 'FIREBASE_CREDENTIALS_PATH', 'Not Set')
-            raise RuntimeError(
-                f"Firebase Admin SDK is not initialized. "
-                f"Please ensure the SERVICE ACCOUNT JSON file exists at: {path}. "
-                f"Check your .env file and ensure FIREBASE_CREDENTIALS_PATH is correct."
-            )
+            # Try to initialize Firebase
+            try:
+                from firebase_init import initialize_firebase
+                success = initialize_firebase()
+                if not success:
+                    raise RuntimeError(
+                        "Firebase Admin SDK could not be initialized. "
+                        "Please check your FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_CREDENTIALS_PATH settings."
+                    )
+            except ImportError:
+                raise RuntimeError(
+                    "Firebase Admin SDK is not initialized and firebase_init module not found."
+                )
         self.db: firestore.Client = firebase_firestore.client()
         self.collection: firestore.CollectionReference = self.db.collection(self.collection_name)
 
