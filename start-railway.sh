@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# If FIREBASE_KEY_CONTENT is provided as an env variable, write it to the file
+# If FIREBASE_KEY_CONTENT is provided as an env variable, set it as FIREBASE_SERVICE_ACCOUNT_JSON
 if [ ! -z "$FIREBASE_KEY_CONTENT" ]; then
-    echo "Writing Firebase key from environment variable..."
-    echo "$FIREBASE_KEY_CONTENT" > /app/firebase-key.json
+    echo "Setting Firebase credentials from environment variable..."
+    export FIREBASE_SERVICE_ACCOUNT_JSON="$FIREBASE_KEY_CONTENT"
 fi
 
 # Apply database migrations
