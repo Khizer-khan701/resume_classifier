@@ -15,3 +15,5 @@ whitenoise
 docx2txt
 eventlet
 supervisor
+psycopg2-binary
+dj-database-url

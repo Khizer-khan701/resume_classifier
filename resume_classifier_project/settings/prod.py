@@ -1,14 +1,14 @@
 from .base import *
 import os
+import dj_database_url
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1']
 
-# CSRF Trusted Origins for Hugging Face
+# CSRF Trusted Origins for Railway
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.hf.space',
-    'https://*.huggingface.co'
+    'https://*.railway.app'
 ]
 
 MIDDLEWARE = [
@@ -23,26 +23,29 @@ MIDDLEWARE = [
     'common.middleware.GlobalErrorHandlingMiddleware',
 ]
 
-# Hugging Face Proxy Settings
+# Railway Proxy Settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
 # Security & Redirects
-SECURE_SSL_REDIRECT = False # HF Proxy handles SSL
-APPEND_SLASH = True 
-SECURE_HSTS_SECONDS = 0
+SECURE_SSL_REDIRECT = True
+APPEND_SLASH = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
-# Cookie settings for Hugging Face iFrames
-SESSION_COOKIE_SAMESITE = 'None'
+# Cookie settings
+SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = True
-X_FRAME_OPTIONS = 'ALLOWALL'
 
+# Database
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
